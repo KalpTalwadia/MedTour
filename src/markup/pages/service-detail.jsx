@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
 
 // Import Images
 import PageBanner from '../../components/common/page-banner';
@@ -14,54 +16,38 @@ import ServiceDoctorRepeater from '../../components/service-details/service-doct
 
 
 const ServiceDetail = () => {
-	let params = useParams();
-	let serviceDetails = {
-		serviceTitle: "Dentistry",
-		procedures: [{
-			procedureTitle: "orthodontic treatments",
-			procedureCode: "orthodontic"
-		}, {
-			procedureTitle: "restorative treatments",
-			procedureCode: "orthodontic"
-		}, {
-			procedureTitle: "root canal treatments",
-			procedureCode: "orthodontic"
-		}, {
-			procedureTitle: "gum disease treatments",
-			procedureCode: "orthodontic"
-		}, {
-			procedureTitle: "cosmetic dentistry",
-			procedureCode: "orthodontic"
-		}, {
-			procedureTitle: "dental implants",
-			procedureCode: "orthodontic"
-		}],
-		hospitals: [{
-			name: "Max Hospital",
-			city: "Delhi",
-			state: "Delhi",
-			rating: 4
-		}, {
-			name: "Manipal Hospital",
-			city: "Banglore",
-			state: "Karnataka",
-			rating: 4
-		},
-		{
-			name: "Rainbow Hospital",
-			city: "Banglore",
-			state: "Karnataka",
-			rating: 4
-		}],
-		doctors: [
-			{
-				name: "ABC",
-				city: "Delhi",
-				state: "Delhi",
-				rating: 4
+	const [serviceDetails, setServiceDetails] = useState([]);
+	const params = useParams();
+
+
+	useEffect(() => {
+		const fetchServiceDetails = async () => {
+			try {
+
+				const collections = ['doctors', 'hospital', 'procedures']
+				const collectionData = [];
+
+				for (const collectionName of collections) {
+					const collectionRef = collection(db, collectionName);
+					const querySnapshot = await getDocs(collectionRef);
+
+					const documents = [];
+					querySnapshot.forEach(doc => {
+						documents.push(doc.data());
+					});
+
+					collectionData.push({ collectionName, documents });
+				}
+
+				setServiceDetails(collectionData);
+				console.log(serviceDetails)
+			} catch (error) {
+				console.error("Error fetching service data: ", error);
 			}
-		]
-	}
+		};
+
+		fetchServiceDetails();
+	}, [params.id]);
 
 	return (
 		<>
@@ -76,15 +62,13 @@ const ServiceDetail = () => {
 							</div>
 							<div>
 								<Tabs justify>
-									<Tab eventKey="procedures" title={`Our ${params.type} services`}>
-										<ProcedureRepeater procedureDetail={serviceDetails.procedures} />
-									</Tab>
-									<Tab eventKey="hospitals" title="Hospitals">
-										<ServiceHospitalRepeater hospitalDetails={serviceDetails.hospitals} />
-									</Tab>
-									<Tab eventKey="doctos" title="Top Doctors">
-										<ServiceDoctorRepeater doctorDetails={serviceDetails.doctors}></ServiceDoctorRepeater>
-									</Tab>
+									{serviceDetails.map((service, index) => (
+										<Tab key={index} eventKey={service.collectionName} title={service.collectionName.charAt(0).toUpperCase() + service.collectionName.slice(1)}>
+											{service.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={service.documents} />}
+											{service.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={service.documents} />}
+											{service.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={service.documents} />}
+										</Tab>
+									))}
 								</Tabs>
 							</div>
 							<div className="clearfix">
