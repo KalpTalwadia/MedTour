@@ -23,31 +23,25 @@ const ServiceDetail = () => {
 	useEffect(() => {
 		const fetchServiceDetails = async () => {
 			try {
-
-				const collections = ['doctors', 'hospital', 'procedures']
-				const collectionData = [];
-
-				for (const collectionName of collections) {
+				const collections = ['procedures', 'hospital', 'doctors'];
+				const promises = collections.map(async collectionName => {
 					const collectionRef = collection(db, collectionName);
 					const querySnapshot = await getDocs(collectionRef);
+					const documents = querySnapshot.docs.map(doc => doc.data());
+					return { collectionName, documents };
+				});
+				const results = await Promise.all(promises);
+				setServiceDetails(results);
 
-					const documents = [];
-					querySnapshot.forEach(doc => {
-						documents.push(doc.data());
-					});
 
-					collectionData.push({ collectionName, documents });
-				}
-
-				setServiceDetails(collectionData);
-				console.log(serviceDetails)
+				localStorage.setItem("data", JSON.stringify(serviceDetails));
 			} catch (error) {
 				console.error("Error fetching service data: ", error);
 			}
 		};
 
 		fetchServiceDetails();
-	}, [params.id]);
+	}, []);
 
 	return (
 		<>
@@ -65,7 +59,7 @@ const ServiceDetail = () => {
 									{serviceDetails.map((service, index) => (
 										<Tab key={index} eventKey={service.collectionName} title={service.collectionName.charAt(0).toUpperCase() + service.collectionName.slice(1)}>
 											{service.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={service.documents} />}
-											{service.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={service.documents} />}
+											{service.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={service.documents} serviceIndex={service.index} />}
 											{service.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={service.documents} />}
 										</Tab>
 									))}
