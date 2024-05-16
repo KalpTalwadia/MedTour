@@ -32,9 +32,6 @@ const ServiceDetail = () => {
 				});
 				const results = await Promise.all(promises);
 				setServiceDetails(results);
-
-
-				localStorage.setItem("data", JSON.stringify(serviceDetails));
 			} catch (error) {
 				console.error("Error fetching service data: ", error);
 			}
@@ -42,6 +39,12 @@ const ServiceDetail = () => {
 
 		fetchServiceDetails();
 	}, []);
+
+	useEffect(() => {
+		if (serviceDetails.length > 0) {
+			localStorage.setItem("data", JSON.stringify(serviceDetails));
+		}
+	}, [serviceDetails]);
 
 	return (
 		<>
