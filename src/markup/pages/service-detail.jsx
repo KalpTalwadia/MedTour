@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+// ServiceDetail.js
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../../firebase";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchServiceDetails } from '../../app/features/fetchDataSlice';
 
-// Import Images
 import PageBanner from '../../components/common/page-banner';
 import ProcedureRepeater from '../../components/service-details/procedure-repeater';
 import ProcedureQuestions from '../../components/service-details/procedure-questions';
@@ -12,74 +12,56 @@ import { Tab, Tabs } from 'react-bootstrap';
 import ServiceHospitalRepeater from '../../components/service-details/service-hospital-repeater';
 import ServiceDoctorRepeater from '../../components/service-details/service-doctor-repeater';
 
-
-
-
 const ServiceDetail = () => {
-	const [serviceDetails, setServiceDetails] = useState([]);
+	const dispatch = useDispatch();
+	const serviceDetails = useSelector((state) => state.services.data);
+
+	const serviceStatus = useSelector((state) => state.services.status);
+	const error = useSelector((state) => state.services.error);
 	const params = useParams();
 
-
 	useEffect(() => {
-		const fetchServiceDetails = async () => {
-			try {
-				const collections = ['procedures', 'hospital', 'doctors'];
-				const promises = collections.map(async collectionName => {
-					const collectionRef = collection(db, collectionName);
-					const querySnapshot = await getDocs(collectionRef);
-					const documents = querySnapshot.docs.map(doc => doc.data());
-					return { collectionName, documents };
-				});
-				const results = await Promise.all(promises);
-				setServiceDetails(results);
-			} catch (error) {
-				console.error("Error fetching service data: ", error);
-			}
-		};
-
-		fetchServiceDetails();
-	}, []);
-
-	useEffect(() => {
-		if (serviceDetails.length > 0) {
-			localStorage.setItem("data", JSON.stringify(serviceDetails));
+		if (serviceStatus === 'idle') {
+			dispatch(fetchServiceDetails());
 		}
-	}, [serviceDetails]);
+	}, [serviceStatus, dispatch]);
 
 	return (
-		<>
-
-			<div className="page-content bg-white">
-				<PageBanner title={params.type} />
-				<section className="section-area section-sp1">
-					<div className="container">
-						<div className="row">
-							<div className="clearfix">
-								<ServiceHeadDetails />
-							</div>
-							<div>
+		<div className="page-content bg-white">
+			<PageBanner title={params.type} />
+			<section className="section-area section-sp1">
+				<div className="container">
+					<div className="row">
+						<div className="clearfix">
+							<ServiceHeadDetails />
+						</div>
+						<div>
+							{serviceStatus === 'loading' && <p>Loading...</p>}
+							{serviceStatus === 'failed' && <p>Error: {error}</p>}
+							{serviceStatus === 'succeeded' && (
 								<Tabs justify>
-									{serviceDetails.map((service, index) => (
-										<Tab key={index} eventKey={service.collectionName} title={service.collectionName.charAt(0).toUpperCase() + service.collectionName.slice(1)}>
-											{service.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={service.documents} />}
-											{service.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={service.documents} serviceIndex={service.index} />}
-											{service.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={service.documents} />}
+									{serviceDetails.map((services, index) => (
+										<Tab
+											key={index}
+											eventKey={services.collectionName}
+											title={services.collectionName.charAt(0).toUpperCase() + services.collectionName.slice(1)}
+										>
+											{services.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={services.documents} />}
+											{services.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={services.documents} serviceIndex={services.index} />}
+											{services.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={services.documents} />}
 										</Tab>
 									))}
 								</Tabs>
-							</div>
-							<div className="clearfix">
-								<ProcedureQuestions />
-							</div>
+							)}
+						</div>
+						<div className="clearfix">
+							<ProcedureQuestions />
 						</div>
 					</div>
-				</section>
-
-			</div>
-
-		</>
+				</div>
+			</section>
+		</div>
 	);
-
 }
 
 export default ServiceDetail;
