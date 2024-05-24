@@ -1,17 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Rating } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { fetchServiceDetails } from '../../app/features/fetchDataSlice';
 import LatestNewsSection from '../elements/latest-news-slider';
 import { Link, useParams } from 'react-router-dom';
 import Error from './error-404';
 
 const Hospital = () => {
-    const index = useParams().type;
-    const hospitalIndex = parseInt(index);
-    const data = JSON.parse(localStorage.getItem('data')) || [];
-    let hospital = data[1].documents[hospitalIndex]
+    const { type: index } = useParams();
+    const hospitalIndex = parseInt(index, 10);
+    const dispatch = useDispatch();
+
+    const { data, status, error } = useSelector((state) => state.services);
+
+    useEffect(() => {
+        if (status === 'idle') {
+            dispatch(fetchServiceDetails());
+        }
+    }, [status, dispatch]);
+
+    if (status === 'loading') {
+        return <div>Loading...</div>;
+    }
+
+    if (status === 'failed') {
+        return <div>Error: {error}</div>;
+    }
+
+    const hospital = data.find((item) => item.collectionName === 'hospital')?.documents?.[hospitalIndex];
 
     if (!hospital) {
-        return Error;
+        return <Error />;
     }
     return (
         <div className="page-content bg-white">
@@ -19,8 +39,8 @@ const Hospital = () => {
                 <div className="col-md-8">
                     <div className="card my-5">
                         <div className="card-header text-center">
-                            <h1 className="mb-0 text-blue">Hospital Information</h1>
-                            <Link to="/" className="btn btn-primary mt-3">Get Quote</Link>
+                            <h1 className="mb-0 mt-5 text-blue">Hospital Information</h1>
+                            <Link to="/" className="btn btn-primary mt-5">Get Quote</Link>
                         </div>
                         <div className="card-body">
                             <div className="row">

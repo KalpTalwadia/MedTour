@@ -46,9 +46,9 @@ const ServiceDetail = () => {
 											eventKey={services.collectionName}
 											title={services.collectionName.charAt(0).toUpperCase() + services.collectionName.slice(1)}
 										>
-											{services.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={services.documents} />}
 											{services.collectionName === 'hospital' && <ServiceHospitalRepeater hospitalDetails={services.documents} serviceIndex={services.index} />}
-											{services.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={services.documents} />}
+											{services.collectionName === 'doctors' && <ServiceDoctorRepeater doctorDetails={services.documents} serviceIndex={services.index} />}
+											{services.collectionName === 'procedures' && <ProcedureRepeater procedureDetail={services.documents} serviceIndex={services.index} />}
 										</Tab>
 									))}
 								</Tabs>

@@ -26,6 +26,7 @@ import BlogDetails from './pages/blog-details';
 import Error from './pages/error-404';
 import Qoute from './pages/qoute';
 import Hospital from './pages/hospital';
+import Doctor from './pages/doctor';
 
 class Markup extends Component {
 	render() {
@@ -45,6 +46,7 @@ class Markup extends Component {
 							<Route path='/service-detail/:type' element={<ServiceDetail />} />
 							<Route path='/hospital/:type' element={<Hospital />} />
 							<Route path='/faq' element={<Faq />} />
+							<Route path='/doctor/:type' element={<Doctor />} />
 							<Route path='/contact-us' element={<ContactUs />} />
 							<Route path='/booking' element={<Booking />} />
 							<Route path='/blog-grid' element={<BlogGrid />} />
