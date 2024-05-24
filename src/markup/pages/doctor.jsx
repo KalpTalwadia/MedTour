@@ -22,6 +22,8 @@ const Doctor = () => {
         }
     }, [status, dispatch]);
 
+    const doctor = data.find((item) => item.collectionName === 'doctors')?.documents?.[docIndex];
+
     if (status === 'loading') {
         return <div>Loading...</div>;
     }
@@ -30,7 +32,6 @@ const Doctor = () => {
         return <div>Error: {error}</div>;
     }
 
-    const doctor = data.find((item) => item.collectionName === 'doctors')?.documents?.[docIndex];
 
     if (!doctor) {
         return <Error />;
@@ -46,7 +47,7 @@ const Doctor = () => {
                         </div>
                         <div className="card-body">
                             <div className="row">
-                                <div className="col-md-4 d-flex justify-content-center align-items-center">
+                                <div className="col-md-4 order-md-1">
                                     <img
                                         src="https://mymedtrip.com/wp-content/uploads/2021/06/miot.jpg"
                                         className="img-fluid rounded "
