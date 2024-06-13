@@ -8,6 +8,7 @@ import waveBlue from "../../images/shap/wave-blue.png";
 import circleDots from "../../images/shap/circle-dots.png";
 import plusBlue from "../../images/shap/plus-blue.png";
 import LatestNewsSection from '../elements/latest-news-slider';
+import ServiceTierCard from "../../components/service-details/ServiceTierCard"
 
 
 const Qoute = () => {
@@ -34,6 +35,7 @@ const Qoute = () => {
                                 </Step>
                             ))}
                         </Stepper>
+                        <ServiceTierCard />
                     </div>
                 </div>
             </section>

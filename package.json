@@ -12,6 +12,8 @@
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.3.0",
     "bootstrap-icons": "^1.11.3",
+    "cors": "^2.8.5",
+    "file-saver": "^2.0.5",
     "firebase": "^10.11.1",
     "react": "^17.0.0 || ^18.0.0",
     "react-bootstrap": "^2.7.4",
@@ -24,7 +26,8 @@
     "react-stickynode": "^4.1.0",
     "sass": "^1.63.4",
     "slick-carousel": "^1.8.1",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
