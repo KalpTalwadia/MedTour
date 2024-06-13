@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { getDownloadURL, ref } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes, deleteObject } from "firebase/storage";
 import { storage } from '../../firebase';
 
 const tiers = [
@@ -51,10 +51,9 @@ const TierPricing = () => {
 
     const addDataToExcel = async (tierId, selectedOptions) => {
         try {
-            // Get the download URL for the Excel file from Firebase Storage
             const fileRef = ref(storage, 'selected_tiers.xlsx');
             const url = await getDownloadURL(fileRef);
-            debugger
+
             // Fetch the Excel file
             const response = await fetch(url);
             if (!response.ok) {
@@ -79,10 +78,27 @@ const TierPricing = () => {
             const newWorkbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet1');
 
-            // Download the updated workbook
-            XLSX.writeFile(newWorkbook, 'updated_data.xlsx');
+            // Write the updated workbook to a binary string
+            const updatedExcel = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' });
+
+            // Create a Blob from the binary string
+            const blob = new Blob([updatedExcel], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // Upload the updated file back to Firebase Storage
+            const updatedFileRef = ref(storage, 'selected_tiers_updated.xlsx');
+            await uploadBytes(updatedFileRef, blob);
+
+            // Delete the previous file from Firebase Storage
+            await deleteObject(fileRef);
+
+            // Rename the updated file to the original file name
+            const newFileRef = ref(storage, 'selected_tiers.xlsx');
+            await uploadBytes(newFileRef, blob);
+            await deleteObject(updatedFileRef);
+
+            console.log('File updated and uploaded successfully!');
         } catch (error) {
-            console.error('Error fetching Excel file: ', error);
+            console.error('Error fetching or updating Excel file: ', error);
         }
     };
 
