@@ -18,15 +18,18 @@ const options = {
 const TierPricing = () => {
     const [selectedTier, setSelectedTier] = useState(null);
     const [selectedOptions, setSelectedOptions] = useState({ city: '', hospital: '', doctor: '' });
+    const [name, setName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [showPrice, setShowPrice] = useState(false);
 
     useEffect(() => {
-        setShowPrice(false);
-        if (selectedTier !== null && Object.values(selectedOptions).every(option => option !== '')) {
+        if (selectedTier !== null && Object.values(selectedOptions).every(option => option !== '') && name !== '' && phoneNumber !== '') {
             setShowPrice(true);
-            addDataToExcel(selectedTier, selectedOptions);
+            addDataToExcel(selectedTier, selectedOptions, name, phoneNumber);
+        } else {
+            setShowPrice(false);
         }
-    }, [selectedTier, selectedOptions]);
+    }, [selectedTier, selectedOptions, name, phoneNumber]);
 
     const handleTierChange = (tierId) => {
         setSelectedTier(tierId);
@@ -39,17 +42,19 @@ const TierPricing = () => {
         }));
     };
 
-    const transformData = (data, tierId, selectedOptions) => {
+    const transformData = (data, tierId, selectedOptions, name, phoneNumber) => {
         const newRow = {
             Tier: tiers[tierId - 1].name,
             City: selectedOptions.city,
             Hospital: selectedOptions.hospital,
-            Doctor: selectedOptions.doctor
+            Doctor: selectedOptions.doctor,
+            Name: name,
+            PhoneNumber: phoneNumber
         };
         return [...data, newRow];
     };
 
-    const addDataToExcel = async (tierId, selectedOptions) => {
+    const addDataToExcel = async (tierId, selectedOptions, name, phoneNumber) => {
         try {
             const fileRef = ref(storage, 'selected_tiers.xlsx');
             const url = await getDownloadURL(fileRef);
@@ -71,7 +76,7 @@ const TierPricing = () => {
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
             // Transform the fetched data
-            const transformedData = transformData(jsonData, tierId, selectedOptions);
+            const transformedData = transformData(jsonData, tierId, selectedOptions, name, phoneNumber);
 
             // Add data to the Excel sheet
             const newWorksheet = XLSX.utils.json_to_sheet(transformedData);
@@ -103,66 +108,88 @@ const TierPricing = () => {
     };
 
     return (
-        <div className="container mx-auto py-8">
+        <div className="container py-8">
             <h1 className="text-2xl font-bold mb-4">Tier Pricing</h1>
             <div className="p-4 border rounded-lg">
-                <div className="mb-4">
-                    <label className="block mb-1">Select Tier:</label>
-                    <select
-                        className="border rounded px-2 py-1 w-full"
-                        style={{ minWidth: "200px" }}
-                        onChange={(e) => handleTierChange(parseInt(e.target.value))}
-                    >
-                        <option value="">Select Tier</option>
-                        {tiers.map(tier => (
-                            <option key={tier.id} value={tier.id}>{tier.name}</option>
-                        ))}
-                    </select>
+                <div className="row mb-4">
+                    <div className="col-md-6">
+                        <label className="form-label">Name:</label>
+                        <input
+                            type="text"
+                            className="form-control  border-0 border-bottom"
+                            placeholder="Enter your name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
+                    <div className="col-md-6">
+                        <label className="form-label">Phone Number:</label>
+                        <input
+                            type="text"
+                            className="form-control border-0 border-bottom"
+                            placeholder="Enter your phone number"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                        />
+                    </div>
                 </div>
-                {selectedTier !== null && (
-                    <>
-                        <div className="mb-4">
-                            <label className="block mb-1 mt-4">City:</label>
-                            <select
-                                className="border rounded px-2 py-1 w-full"
-                                onChange={(e) => handleOptionChange('city', e.target.value)}
-                            >
-                                <option value="">Select City</option>
-                                {options.cities.map(city => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block mb-1 mt-4">Hospital:</label>
-                            <select
-                                className="border rounded px-2 py-1 w-full"
-                                onChange={(e) => handleOptionChange('hospital', e.target.value)}
-                            >
-                                <option value="">Select Hospital</option>
-                                {options.hospitals.map(hospital => (
-                                    <option key={hospital} value={hospital}>{hospital}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block mb-1 mt-4">Doctor:</label>
-                            <select
-                                className="border rounded px-2 py-1 w-full"
-                                onChange={(e) => handleOptionChange('doctor', e.target.value)}
-                            >
-                                <option value="">Select Doctor</option>
-                                {options.doctors.map(doctor => (
-                                    <option key={doctor} value={doctor}>{doctor}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {showPrice && <p className="text-gray-600 mt-4">Price: ${tiers[selectedTier - 1].price}</p>}
-                    </>
-                )}
+                <div className="row mb-4">
+                    <div className="col-md-6">
+                        <label className="form-label">Select Tier:</label>
+                        <select
+                            className="form-select border-0 border-bottom"
+                            onChange={(e) => handleTierChange(parseInt(e.target.value))}
+                        >
+                            <option value="">Select Tier</option>
+                            {tiers.map(tier => (
+                                <option key={tier.id} value={tier.id}>{tier.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md-6">
+                        <label className="form-label">City:</label>
+                        <select
+                            className="form-select border-0 border-bottom"
+                            onChange={(e) => handleOptionChange('city', e.target.value)}
+                        >
+                            <option value="">Select City</option>
+                            {options.cities.map(city => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="row mb-4">
+                    <div className="col-md-6">
+                        <label className="form-label">Hospital:</label>
+                        <select
+                            className="form-select border-0 border-bottom"
+                            onChange={(e) => handleOptionChange('hospital', e.target.value)}
+                        >
+                            <option value="">Select Hospital</option>
+                            {options.hospitals.map(hospital => (
+                                <option key={hospital} value={hospital}>{hospital}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md-6">
+                        <label className="form-label">Doctor:</label>
+                        <select
+                            className="form-select border-0 border-bottom"
+                            onChange={(e) => handleOptionChange('doctor', e.target.value)}
+                        >
+                            <option value="">Select Doctor</option>
+                            {options.doctors.map(doctor => (
+                                <option key={doctor} value={doctor}>{doctor}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                {showPrice && <p className="text-gray-600 mt-4">Price: ${tiers[selectedTier - 1].price}</p>}
             </div>
         </div>
     );
+
 };
 
 export default TierPricing;
