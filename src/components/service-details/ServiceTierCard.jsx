@@ -16,29 +16,45 @@ const options = {
 };
 
 const TierPricing = () => {
-    const [selectedTier, setSelectedTier] = useState(null);
-    const [selectedOptions, setSelectedOptions] = useState({ city: '', hospital: '', doctor: '' });
-    const [name, setName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const [formData, setFormData] = useState({
+        selectedTier: null,
+        selectedOptions: { city: '', hospital: '', doctor: '' },
+        name: '',
+        phoneNumber: '',
+    });
     const [showPrice, setShowPrice] = useState(false);
 
     useEffect(() => {
+        const { selectedTier, selectedOptions, name, phoneNumber } = formData;
         if (selectedTier !== null && Object.values(selectedOptions).every(option => option !== '') && name !== '' && phoneNumber !== '') {
             setShowPrice(true);
             addDataToExcel(selectedTier, selectedOptions, name, phoneNumber);
         } else {
             setShowPrice(false);
         }
-    }, [selectedTier, selectedOptions, name, phoneNumber]);
+    }, [formData]);
 
     const handleTierChange = (tierId) => {
-        setSelectedTier(tierId);
+        setFormData(prevState => ({
+            ...prevState,
+            selectedTier: tierId
+        }));
     };
 
     const handleOptionChange = (field, value) => {
-        setSelectedOptions(prevState => ({
+        setFormData(prevState => ({
             ...prevState,
-            [field]: value,
+            selectedOptions: {
+                ...prevState.selectedOptions,
+                [field]: value,
+            }
+        }));
+    };
+
+    const handleInputChange = (field, value) => {
+        setFormData(prevState => ({
+            ...prevState,
+            [field]: value
         }));
     };
 
@@ -77,8 +93,6 @@ const TierPricing = () => {
 
             // Transform the fetched data
             const transformedData = transformData(jsonData, tierId, selectedOptions, name, phoneNumber);
-
-            // Add data to the Excel sheet
             const newWorksheet = XLSX.utils.json_to_sheet(transformedData);
             const newWorkbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(newWorkbook, newWorksheet, 'Sheet1');
@@ -118,8 +132,8 @@ const TierPricing = () => {
                             type="text"
                             className="form-control  border-0 border-bottom"
                             placeholder="Enter your name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={formData.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
                         />
                     </div>
                     <div className="col-md-6">
@@ -128,8 +142,8 @@ const TierPricing = () => {
                             type="text"
                             className="form-control border-0 border-bottom"
                             placeholder="Enter your phone number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            value={formData.phoneNumber}
+                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         />
                     </div>
                 </div>
@@ -185,7 +199,7 @@ const TierPricing = () => {
                         </select>
                     </div>
                 </div>
-                {showPrice && <p className="text-gray-600 mt-4">Price: ${tiers[selectedTier - 1].price}</p>}
+                {showPrice && <p className="text-gray-600 mt-4">Price: ${tiers[formData.selectedTier - 1].price}</p>}
             </div>
         </div>
     );
