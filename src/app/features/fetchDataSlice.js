@@ -1,5 +1,3 @@
-// src/redux/serviceDetailsSlice.js
-
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase.jsx';

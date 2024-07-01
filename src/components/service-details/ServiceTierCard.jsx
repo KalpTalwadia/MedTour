@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { getDownloadURL, ref, uploadBytes, deleteObject } from "firebase/storage";
 import { storage } from '../../firebase';
+import { useDispatch, useSelector } from 'react-redux';
+import { setFormData, setSelectedOptions, setShowPrice } from '../../app/features/TierSlice.js';
 
 const tiers = [
     { id: 1, name: 'Bronze', price: 100 },
@@ -16,46 +18,29 @@ const options = {
 };
 
 const TierPricing = () => {
-    const [formData, setFormData] = useState({
-        selectedTier: null,
-        selectedOptions: { city: '', hospital: '', doctor: '' },
-        name: '',
-        phoneNumber: '',
-    });
-    const [showPrice, setShowPrice] = useState(false);
+    const dispatch = useDispatch();
+    const formData = useSelector((state) => state.tier.formData);
+    const showPrice = useSelector((state) => state.tier.showPrice);
 
     useEffect(() => {
         const { selectedTier, selectedOptions, name, phoneNumber } = formData;
-        if (selectedTier !== null && Object.values(selectedOptions).every(option => option !== '') && name !== '' && phoneNumber !== '') {
-            setShowPrice(true);
+        const isFormComplete = selectedTier !== '' && Object.values(selectedOptions).every(option => option !== '') && name !== '' && phoneNumber !== '';
+
+        dispatch(setShowPrice(isFormComplete));
+
+        if (isFormComplete) {
             addDataToExcel(selectedTier, selectedOptions, name, phoneNumber);
-        } else {
-            setShowPrice(false);
         }
-    }, [formData]);
+    }, [formData, dispatch]);
 
-    const handleTierChange = (tierId) => {
-        setFormData(prevState => ({
-            ...prevState,
-            selectedTier: tierId
-        }));
-    };
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
 
-    const handleOptionChange = (field, value) => {
-        setFormData(prevState => ({
-            ...prevState,
-            selectedOptions: {
-                ...prevState.selectedOptions,
-                [field]: value,
-            }
-        }));
-    };
-
-    const handleInputChange = (field, value) => {
-        setFormData(prevState => ({
-            ...prevState,
-            [field]: value
-        }));
+        if (name in formData.selectedOptions) {
+            dispatch(setSelectedOptions({ [name]: value }));
+        } else {
+            dispatch(setFormData({ [name]: value }));
+        }
     };
 
     const transformData = (data, tierId, selectedOptions, name, phoneNumber) => {
@@ -67,6 +52,7 @@ const TierPricing = () => {
             Name: name,
             PhoneNumber: phoneNumber
         };
+
         return [...data, newRow];
     };
 
@@ -126,33 +112,37 @@ const TierPricing = () => {
             <h1 className="text-2xl font-bold mb-4">Tier Pricing</h1>
             <div className="p-4 border rounded-lg">
                 <div className="row mb-4">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-4">
                         <label className="form-label">Name:</label>
                         <input
                             type="text"
-                            className="form-control  border-0 border-bottom"
+                            className="form-control px-0 pb-3 pt-1  border-0 border-bottom"
                             placeholder="Enter your name"
+                            name="name"
                             value={formData.name}
-                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            onChange={handleInputChange}
                         />
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-6 ">
                         <label className="form-label">Phone Number:</label>
                         <input
                             type="text"
-                            className="form-control border-0 border-bottom"
+                            className="form-control px-0 pb-3 pt-1 border-0 border-bottom"
                             placeholder="Enter your phone number"
+                            name="phoneNumber"
                             value={formData.phoneNumber}
-                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                            onChange={handleInputChange}
                         />
                     </div>
                 </div>
                 <div className="row mb-4">
-                    <div className="col-md-6">
-                        <label className="form-label">Select Tier:</label>
+                    <div className="col-md-6  mb-4">
+                        <label className="form-label">Tier:</label>
                         <select
-                            className="form-select border-0 border-bottom"
-                            onChange={(e) => handleTierChange(parseInt(e.target.value))}
+                            className="form-select px-0 pb-3 pt-1 border-0 border-bottom"
+                            name="selectedTier"
+                            value={formData.selectedTier}
+                            onChange={handleInputChange}
                         >
                             <option value="">Select Tier</option>
                             {tiers.map(tier => (
@@ -163,8 +153,10 @@ const TierPricing = () => {
                     <div className="col-md-6">
                         <label className="form-label">City:</label>
                         <select
-                            className="form-select border-0 border-bottom"
-                            onChange={(e) => handleOptionChange('city', e.target.value)}
+                            className="form-select px-0 pb-3 pt-1 border-0 border-bottom"
+                            name="city"
+                            value={formData.selectedOptions.city}
+                            onChange={handleInputChange}
                         >
                             <option value="">Select City</option>
                             {options.cities.map(city => (
@@ -174,11 +166,13 @@ const TierPricing = () => {
                     </div>
                 </div>
                 <div className="row mb-4">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-4"  >
                         <label className="form-label">Hospital:</label>
                         <select
-                            className="form-select border-0 border-bottom"
-                            onChange={(e) => handleOptionChange('hospital', e.target.value)}
+                            className="form-select border-0 px-0 pb-3 pt-1 border-bottom"
+                            name="hospital"
+                            value={formData.selectedOptions.hospital}
+                            onChange={handleInputChange}
                         >
                             <option value="">Select Hospital</option>
                             {options.hospitals.map(hospital => (
@@ -186,11 +180,13 @@ const TierPricing = () => {
                             ))}
                         </select>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-4">
                         <label className="form-label">Doctor:</label>
                         <select
-                            className="form-select border-0 border-bottom"
-                            onChange={(e) => handleOptionChange('doctor', e.target.value)}
+                            className="form-select px-0 pb-3 pt-1 text-muted border-0 border-bottom"
+                            name="doctor"
+                            value={formData.selectedOptions.doctor}
+                            onChange={handleInputChange}
                         >
                             <option value="">Select Doctor</option>
                             {options.doctors.map(doctor => (
@@ -203,7 +199,6 @@ const TierPricing = () => {
             </div>
         </div>
     );
-
 };
 
 export default TierPricing;
